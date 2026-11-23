@@ -1,8 +1,5 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
+# Python application build and deployment preparation
 
 trigger:
   branches:
@@ -13,17 +10,56 @@ pool:
   vmImage: 'ubuntu-24.04'
 
 steps:
+
+# Step 1: Set up Python
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.11'
     architecture: 'x64'
   displayName: 'Set up Python'
 
+# Step 2: Install dependencies
 - script: |
     python -m pip install --upgrade pip
     python -m pip install requests
   displayName: 'Install dependencies'
 
+# Step 3: Check Python syntax
 - script: |
     python -m py_compile main.py
   displayName: 'Check Python syntax'
+
+# Step 4: Prepare application files
+- task: CopyFiles@2
+  displayName: 'Prepare application files'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: |
+      **
+      !.git/**
+      !**/.git/**
+      !.venv/**
+      !**/.venv/**
+      !venv/**
+      !**/venv/**
+      !**/__pycache__/**
+      !**/*.pyc
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/app'
+
+# Step 5: Package application into ZIP
+- task: ArchiveFiles@2
+  displayName: 'Create application ZIP'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/app'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/KanyeQuotes.zip'
+    replaceExistingArchive: true
+
+# Step 6: Publish build artifact
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish application artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
