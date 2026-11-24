@@ -1,26 +1,37 @@
-from tkinter import *
+
+from flask import Flask, render_template, jsonify
 import requests
+
+app = Flask(__name__)
 
 
 def get_quote():
-    respond = requests.get(url="https://api.kanye.rest/")
-    data = respond.json()
-    canvas.itemconfig(quote_text, text=data["quote"])
+    """Fetch a random Kanye West quote."""
+    try:
+        response = requests.get(
+            "https://api.kanye.rest/",
+            timeout=10
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        return data.get("quote", "No quote available.")
+
+    except requests.RequestException:
+        return "Unable to fetch a quote. Please try again."
 
 
-window = Tk()
-window.title("Kanye Says...")
-window.config(padx=50, pady=50)
-
-canvas = Canvas(width=300, height=414)
-background_img = PhotoImage(file="background.png")
-canvas.create_image(150, 207, image=background_img)
-quote_text = canvas.create_text(150, 207, text="Kanye Quote Goes HERE", width=250, font=("Arial", 30, "bold"), fill="white")
-canvas.grid(row=0, column=0)
-
-kanye_img = PhotoImage(file="kanye.png")
-kanye_button = Button(image=kanye_img, highlightthickness=0, command=get_quote)
-kanye_button.grid(row=1, column=0)
+@app.route("/")
+def home():
+    quote = get_quote()
+    return render_template("index.html", quote=quote)
 
 
-window.mainloop()
+@app.route("/api/quote")
+def new_quote():
+    quote = get_quote()
+    return jsonify({"quote": quote})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

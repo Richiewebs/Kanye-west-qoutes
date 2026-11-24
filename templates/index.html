@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Kanye Says...</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #202020;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #f5c542;
+            font-size: 42px;
+        }
+
+        .quote-box {
+            background: #333;
+            padding: 40px 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        #quote {
+            font-size: 25px;
+            line-height: 1.5;
+        }
+
+        button {
+            background: #f5c542;
+            color: #202020;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ffdc73;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #status {
+            color: #ccc;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Kanye Says...</h1>
+
+        <div class="quote-box">
+            <p id="quote">{{ quote }}</p>
+        </div>
+
+        <button id="newQuote" onclick="getNewQuote()">
+            Get Another Quote
+        </button>
+
+        <p id="status"></p>
+
+    </div>
+
+    <script>
+        async function getNewQuote() {
+            const button = document.getElementById("newQuote");
+            const quote = document.getElementById("quote");
+            const status = document.getElementById("status");
+
+            button.disabled = true;
+            status.textContent = "Fetching a new quote...";
+
+            try {
+                const response = await fetch("/api/quote");
+
+                if (!response.ok) {
+                    throw new Error("Unable to fetch quote");
+                }
+
+                const data = await response.json();
+
+                quote.textContent = data.quote;
+                status.textContent = "";
+
+            } catch (error) {
+                status.textContent = "Something went wrong. Try again.";
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
